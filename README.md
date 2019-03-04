@@ -9,4 +9,5 @@ Mandelbrot set visualization
 
 ## What you'll see
 Probably this:
+
 ![Screenshot](screenshot.png)
