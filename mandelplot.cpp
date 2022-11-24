@@ -19,6 +19,9 @@ using namespace std;
 #define DEFAULT_WINDOW_WIDTH 300 * (DEFAULT_MAX_DISPLAYED_VALUE_X - DEFAULT_MIN_DISPLAYED_VALUE_X)
 #define DEFAULT_WINDOW_HEIGHT 300 * (DEFAULT_MAX_DISPLAYED_VALUE_Y - DEFAULT_MIN_DISPLAYED_VALUE_Y)
 
+bool isMouseInsideWindow(const sf::Window* window);
+void pointZoom(const int, sf::Vector2f*, sf::Vector2f*, const sf::Window*);
+
 int main()
 {
   // initialize window
@@ -73,44 +76,12 @@ int main()
       }
 
       if (event.type == sf::Event::MouseWheelScrolled) {
-        double scrollDirection = event.mouseWheelScroll.delta;
-        double oldRangeX = maxDisplayedValues.x - minDisplayedValues.x;
-        double deltaX = oldRangeX * 0.1;
-        double oldRangeY = maxDisplayedValues.y - minDisplayedValues.y;
-        double deltaY = oldRangeY * 0.1;
-
-        sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
-        sf::Vector2u windowSize = window.getSize();
-
-        cout << "Mouse position: " << mousePosition.x << ", " << mousePosition.y << endl;
-        cout << "Window size: " << windowSize.x << ", " << windowSize.y << endl;
-
-        double mousePercentLeft = double(mousePosition.x) / double(windowSize.x);
-        double mousePercentTop = double(windowSize.y - mousePosition.y) / double(windowSize.y);
-
-        cout << "mouse percent top: " << mousePercentTop << endl;
-        cout << "mouse percent left: " << mousePercentLeft << endl;
-
-        if (
-          mousePosition.x < 0
-          || mousePosition.y < 0
-          || mousePosition.x > windowSize.x
-          || mousePosition.y > windowSize.y
-        ) {
-          continue;
-        }
-
-        double leftDelta = deltaX * mousePercentLeft;
-        double rightDelta = deltaX - leftDelta;
-
-        double topDelta = deltaY * mousePercentTop;
-        double bottomDelta = deltaY - topDelta;
-
-        minDisplayedValues.x += leftDelta * scrollDirection;
-        minDisplayedValues.y += bottomDelta * scrollDirection;
-
-        maxDisplayedValues.x -= rightDelta * scrollDirection;
-        maxDisplayedValues.y -= bottomDelta * scrollDirection;
+        pointZoom(
+          event.mouseWheelScroll.delta,
+          &minDisplayedValues,
+          &maxDisplayedValues,
+          &window
+        );
       }
     }
 
@@ -123,4 +94,55 @@ int main()
   }
 
   return 0;
+}
+
+/**
+ * Updates minDisplayedValues and maxDisplayedValues
+ */
+void pointZoom(
+  // can be -1 or 1
+  const int scrollDelta,
+  sf::Vector2f* minDisplayedValues,
+  sf::Vector2f* maxDisplayedValues,
+  const sf::Window* window
+)
+{
+  if (!isMouseInsideWindow(window)) return;
+
+  sf::Vector2i mousePosition = sf::Mouse::getPosition(*window);
+  sf::Vector2u windowSize = window->getSize();
+
+  double mousePercentLeft = double(mousePosition.x) / double(windowSize.x);
+  double mousePercentTop = double(mousePosition.y) / double(windowSize.y);
+
+  double scaleFactor = 0.1;
+  // add or subtract scaleFactor, depending on scroll direction
+  double rangeScale = 1 + scaleFactor * scrollDelta;
+
+  double oldXRange = maxDisplayedValues->x - minDisplayedValues->x;
+  double oldYRange = maxDisplayedValues->y - minDisplayedValues->y;
+
+  double newXRange = oldXRange * rangeScale;
+  double newYRange = oldYRange * rangeScale;
+
+  double newMinX =
+    minDisplayedValues->x + (oldXRange - newXRange) * mousePercentLeft;
+  double newMinY =
+    minDisplayedValues->y + (oldYRange - newYRange) * (mousePercentTop / 1);
+
+  minDisplayedValues->x = newMinX;
+  minDisplayedValues->y = newMinY;
+  maxDisplayedValues->x = newMinX + newXRange;
+  maxDisplayedValues->y = newMinY + newYRange;
+}
+
+bool isMouseInsideWindow(const sf::Window* window)
+{
+  sf::Vector2i position = sf::Mouse::getPosition(*window);
+  sf::Vector2u windowSize = window->getSize();
+
+  if (position.x < 0 || position.y < 0) return false;
+  if (position.x > windowSize.x || position.y > windowSize.y) return false;
+
+  return true;
 }
