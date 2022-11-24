@@ -1,5 +1,4 @@
 #include <SFML/Graphics.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
 #include <vector>
 #include <array>
 #include <complex>
@@ -9,167 +8,67 @@ using namespace std;
 
 #define ITERATION_LIMIT 2 * 0xff - 2
 
+#define DEFAULT_WINDOW_WIDTH 700
+#define DEFAULT_WINDOW_HEIGHT 700
+
+#define DEFAULT_MIN_DISPLAYED_VALUE -3.0f
+#define DEFAULT_MAX_DISPLAYED_VALUE 3.0f
+
 sf::Color mandelplot(complex<double>);
 complex<double> toSpacePoint(sf::Vector2f, sf::Vector2u, sf::Rect<double>);
 void drawMandelplot(sf::Rect<double>, sf::RenderTarget*);
 
-sf::RenderWindow* initializeWindow();
-
 int main()
 {
-	bool mouseClicked = false;
+  // initialize window
+  sf::RenderWindow window(
+    sf::VideoMode(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT),
+    "Mandelbrot",
+    sf::Style::None
+  );
 
-	sf::RenderWindow* window = initializeWindow();
-	sf::Event event;
+  window.setVerticalSyncEnabled(true);
+  window.setFramerateLimit(60);
 
-	sf::RenderTexture mandelplotRenderTexture;
-	sf::Rect<double> currentView(
-			0,
-			0,
-			window->getSize().x,
-			window->getSize().y
-	);
-	mandelplotRenderTexture.create(window->getSize().x, window->getSize().y);
-	drawMandelplot(currentView, &mandelplotRenderTexture);
+  sf::Event event;
+  sf::Texture texture;
+  sf::Shader shader;
+  sf::Sprite sprite;
 
-	mandelplotRenderTexture.display();
-	sf::Sprite mandelbrotSet(mandelplotRenderTexture.getTexture());
+  // check if shaders are supported
+  if (!sf::Shader::isAvailable()) {
+    cerr << "ERROR: Shaders are not available in your machine." << endl;
+    return 1;
+  }
 
-	while (window->isOpen()) {
-		while (window->pollEvent(event)) {
-			if (event.type == sf::Event::Closed
-					|| sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
-				window->close();
-			}
+  // try initializing shader
+  shader.loadFromFile("shader.frag", sf::Shader::Fragment);
 
-			if (event.type == sf::Event::MouseButtonPressed && !mouseClicked)
-				mouseClicked = true;
+  // share variables with shader
+  shader.setUniform("resolution", sf::Vector2f(window.getSize()));
+  shader.setUniform("min_displayed", DEFAULT_MIN_DISPLAYED_VALUE);
+  shader.setUniform("max_displayed", DEFAULT_MAX_DISPLAYED_VALUE);
 
-			// ensure this code is run only once on each click
-			if (event.type == sf::Event::MouseButtonReleased && mouseClicked) {
-				if (event.mouseButton.button == sf::Mouse::Button::Left) {
-					currentView.width *= 0.5;
-					currentView.height *= 0.5;
-				}
-				if (event.mouseButton.button == sf::Mouse::Button::Right) {
-					currentView.width *= 2;
-					currentView.height *= 2;
-				}
+  // initialize sprite that covers entire screen
+  // our shader will shade this sprite
+  texture.create(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+  sprite.setTexture(texture);
 
-				mouseClicked = false;
 
-				cout
-					<< sf::Mouse::getPosition(*window).x
-					<< ", " << sf::Mouse::getPosition(*window).y
-					<< endl;
+  while (window.isOpen()) {
+    while (window.pollEvent(event)) {
+      // allow quitting with q or ESC
+      if (event.type == sf::Event::Closed
+          || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)
+          || sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
+        window.close();
+      }
+    }
 
-				currentView.left =
-					sf::Mouse::getPosition(*window).x - (currentView.width / 2);
-				currentView.top =
-					sf::Mouse::getPosition(*window).y - (currentView.height / 2);
+    window.clear();
+    window.draw(sprite, &shader);
+    window.display();
+  }
 
-				if (currentView.top < 0) {
-					currentView.top = 0;
-				}
-				if (currentView.left < 0) {
-					currentView.left = 0;
-				}
-
-				drawMandelplot(currentView, &mandelplotRenderTexture);
-			}
-		}
-
-		window->draw(mandelbrotSet);
-		window->display();
-	}
-
-	return 0;
-}
-
-sf::Color mandelplot(complex<double> complexPoint) {
-	int iterations = 0;
-	complex<double> z = 0;
-	float tempReal;
-
-	while (iterations < ITERATION_LIMIT){
-		if (z.real() * z.real() + z.imag() + z.imag() > 4)
-			break;
-
-		tempReal = z.real() * z.real() - z.imag() * z.imag() + complexPoint.real();
-		z.imag(2 * z.real() * z.imag() + complexPoint.imag());
-		z.real(tempReal);
-
-		iterations++;
-	}
-
-	return sf::Color(iterations % 255, iterations % 255, iterations % 255);
-}
-
-complex<double> toSpacePoint(sf::Vector2f pointInWindow, sf::Vector2u windowSize, sf::Rect<double> viewChunk)
-{
-	// complex point to return
-	complex<double> pointInSpace;
-
-	pointInWindow.x += viewChunk.left;
-	pointInWindow.y += viewChunk.top;
-
-	pointInSpace.real(
-		(pointInWindow.x - windowSize.x / 2.0) / (windowSize.x / 4.0)
-	);
-	pointInSpace.imag(
-		(pointInWindow.y - windowSize.y / 2.0) / (windowSize.x / 4.0)
-	);
-
-	pointInSpace.real(pointInSpace.real() * (viewChunk.width / windowSize.x));
-	pointInSpace.imag(pointInSpace.imag() * (viewChunk.height / windowSize.y));
-
-	return pointInSpace;
-}
-
-/* draws given viewChunk of the mandelbrot set in the given renderTarget */
-void drawMandelplot(sf::Rect<double> viewChunk, sf::RenderTarget* renderTarget)
-{
-	// raster position in the render target
-	sf::Vector2f currentRasterPoint(1, 1);
-	// this rectangle will draw every pixel as a point in the set
-	sf::RectangleShape rasterPoint(sf::Vector2f(1, 1));
-
-	// move the rasterpoint to the beginning
-	rasterPoint.setPosition(currentRasterPoint);
-
-	// TODO: Use a shader?
-	// loop through each pixel in the RenderTarget
-	for (
-		;
-		currentRasterPoint.y <= renderTarget->getSize().y;
-		currentRasterPoint.y++
-	) {
-		for (
-			currentRasterPoint.x = 1;
-			currentRasterPoint.x <= renderTarget->getSize().x;
-			currentRasterPoint.x++
-		) {
-			rasterPoint.setPosition(currentRasterPoint);
-			rasterPoint.setFillColor(
-				mandelplot(
-					toSpacePoint(
-						currentRasterPoint,
-						renderTarget->getSize(),
-						viewChunk
-					)
-				)
-			);
-			renderTarget->draw(rasterPoint);
-		}
-	}
-}
-
-sf::RenderWindow* initializeWindow()
-{
-	sf::RenderWindow* window = new sf::RenderWindow(
-		sf::VideoMode(700, 700),
-		"Mandelbrot",
-		sf::Style::None
-	);
-	return window;
+  return 0;
 }
