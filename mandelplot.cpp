@@ -19,10 +19,6 @@ using namespace std;
 #define DEFAULT_WINDOW_WIDTH 300 * (DEFAULT_MAX_DISPLAYED_VALUE_X - DEFAULT_MIN_DISPLAYED_VALUE_X)
 #define DEFAULT_WINDOW_HEIGHT 300 * (DEFAULT_MAX_DISPLAYED_VALUE_Y - DEFAULT_MIN_DISPLAYED_VALUE_Y)
 
-sf::Color mandelplot(complex<double>);
-complex<double> toSpacePoint(sf::Vector2f, sf::Vector2u, sf::Rect<double>);
-void drawMandelplot(sf::Rect<double>, sf::RenderTarget*);
-
 int main()
 {
   // initialize window
@@ -77,20 +73,20 @@ int main()
       }
 
       if (event.type == sf::Event::MouseWheelScrolled) {
-        float scrollDirection = event.mouseWheelScroll.delta;
-        float oldRangeX = maxDisplayedValues.x - minDisplayedValues.x;
-        float deltaX = oldRangeX * 0.1;
-        float oldRangeY = maxDisplayedValues.y - minDisplayedValues.y;
-        float deltaY = oldRangeY * 0.1;
+        double scrollDirection = event.mouseWheelScroll.delta;
+        double oldRangeX = maxDisplayedValues.x - minDisplayedValues.x;
+        double deltaX = oldRangeX * 0.1;
+        double oldRangeY = maxDisplayedValues.y - minDisplayedValues.y;
+        double deltaY = oldRangeY * 0.1;
 
-        sf::Vector2i mousePosition = sf::Mouse::getPosition();
+        sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
         sf::Vector2u windowSize = window.getSize();
 
         cout << "Mouse position: " << mousePosition.x << ", " << mousePosition.y << endl;
         cout << "Window size: " << windowSize.x << ", " << windowSize.y << endl;
 
-        float mousePercentLeft = float(mousePosition.x) / float(windowSize.x);
-        float mousePercentTop = float(windowSize.y - mousePosition.y) / float(windowSize.y);
+        double mousePercentLeft = double(mousePosition.x) / double(windowSize.x);
+        double mousePercentTop = double(windowSize.y - mousePosition.y) / double(windowSize.y);
 
         cout << "mouse percent top: " << mousePercentTop << endl;
         cout << "mouse percent left: " << mousePercentLeft << endl;
@@ -104,11 +100,11 @@ int main()
           continue;
         }
 
-        float leftDelta = deltaX * mousePercentLeft;
-        float rightDelta = deltaX - leftDelta;
+        double leftDelta = deltaX * mousePercentLeft;
+        double rightDelta = deltaX - leftDelta;
 
-        float topDelta = deltaY * mousePercentTop;
-        float bottomDelta = deltaY - topDelta;
+        double topDelta = deltaY * mousePercentTop;
+        double bottomDelta = deltaY - topDelta;
 
         minDisplayedValues.x += leftDelta * scrollDirection;
         minDisplayedValues.y += bottomDelta * scrollDirection;
