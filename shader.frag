@@ -2,7 +2,7 @@
 precision mediump float
 #endif
 
-#define MAX_ITERATIONS 50.0
+#define MAX_ITERATIONS 400.0
 
 uniform vec2 resolution;
 uniform vec2 min_displayed;
