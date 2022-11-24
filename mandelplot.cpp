@@ -113,7 +113,7 @@ void pointZoom(
   sf::Vector2u windowSize = window->getSize();
 
   double mousePercentLeft = double(mousePosition.x) / double(windowSize.x);
-  double mousePercentTop = double(mousePosition.y) / double(windowSize.y);
+  double mousePercentBottom =  1.0 - double(mousePosition.y) / double(windowSize.y);
 
   double scaleFactor = 0.1;
   // add or subtract scaleFactor, depending on scroll direction
@@ -128,7 +128,7 @@ void pointZoom(
   double newMinX =
     minDisplayedValues->x + (oldXRange - newXRange) * mousePercentLeft;
   double newMinY =
-    minDisplayedValues->y + (oldYRange - newYRange) * (mousePercentTop / 1);
+    minDisplayedValues->y + (oldYRange - newYRange) * (mousePercentBottom / 1);
 
   minDisplayedValues->x = newMinX;
   minDisplayedValues->y = newMinY;
