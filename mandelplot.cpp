@@ -11,8 +11,11 @@ using namespace std;
 #define DEFAULT_WINDOW_WIDTH 700
 #define DEFAULT_WINDOW_HEIGHT 700
 
-#define DEFAULT_MIN_DISPLAYED_VALUE -3.0f
-#define DEFAULT_MAX_DISPLAYED_VALUE 3.0f
+#define DEFAULT_MIN_DISPLAYED_VALUE_X -2.0f
+#define DEFAULT_MAX_DISPLAYED_VALUE_X 0.47f
+
+#define DEFAULT_MIN_DISPLAYED_VALUE_Y -1.12f
+#define DEFAULT_MAX_DISPLAYED_VALUE_Y 1.12f
 
 sf::Color mandelplot(complex<double>);
 complex<double> toSpacePoint(sf::Vector2f, sf::Vector2u, sf::Rect<double>);
@@ -24,7 +27,7 @@ int main()
   sf::RenderWindow window(
     sf::VideoMode(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT),
     "Mandelbrot",
-    sf::Style::None
+    sf::Style::Resize
   );
 
   window.setVerticalSyncEnabled(true);
@@ -46,8 +49,20 @@ int main()
 
   // share variables with shader
   shader.setUniform("resolution", sf::Vector2f(window.getSize()));
-  shader.setUniform("min_displayed", DEFAULT_MIN_DISPLAYED_VALUE);
-  shader.setUniform("max_displayed", DEFAULT_MAX_DISPLAYED_VALUE);
+  shader.setUniform(
+    "min_displayed",
+    sf::Vector2f(
+      DEFAULT_MIN_DISPLAYED_VALUE_X,
+      DEFAULT_MIN_DISPLAYED_VALUE_Y
+    )
+  );
+  shader.setUniform(
+    "max_displayed",
+    sf::Vector2f(
+      DEFAULT_MAX_DISPLAYED_VALUE_X,
+      DEFAULT_MAX_DISPLAYED_VALUE_Y
+    )
+  );
 
   // initialize sprite that covers entire screen
   // our shader will shade this sprite
