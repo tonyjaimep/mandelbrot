@@ -8,14 +8,14 @@ using namespace std;
 
 #define ITERATION_LIMIT 2 * 0xff - 2
 
-#define DEFAULT_WINDOW_WIDTH 700
-#define DEFAULT_WINDOW_HEIGHT 700
-
 #define DEFAULT_MIN_DISPLAYED_VALUE_X -2.0f
 #define DEFAULT_MAX_DISPLAYED_VALUE_X 0.47f
 
 #define DEFAULT_MIN_DISPLAYED_VALUE_Y -1.12f
 #define DEFAULT_MAX_DISPLAYED_VALUE_Y 1.12f
+
+#define DEFAULT_WINDOW_WIDTH 300 * (DEFAULT_MAX_DISPLAYED_VALUE_X - DEFAULT_MIN_DISPLAYED_VALUE_X)
+#define DEFAULT_WINDOW_HEIGHT 300 * (DEFAULT_MAX_DISPLAYED_VALUE_Y - DEFAULT_MIN_DISPLAYED_VALUE_Y)
 
 sf::Color mandelplot(complex<double>);
 complex<double> toSpacePoint(sf::Vector2f, sf::Vector2u, sf::Rect<double>);
@@ -27,7 +27,7 @@ int main()
   sf::RenderWindow window(
     sf::VideoMode(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT),
     "Mandelbrot",
-    sf::Style::Resize
+    sf::Style::None
   );
 
   window.setVerticalSyncEnabled(true);
@@ -65,10 +65,9 @@ int main()
   );
 
   // initialize sprite that covers entire screen
-  // our shader will shade this sprite
+  // our shader will shade this empty sprite
   texture.create(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
   sprite.setTexture(texture);
-
 
   while (window.isOpen()) {
     while (window.pollEvent(event)) {

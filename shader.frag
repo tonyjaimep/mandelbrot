@@ -31,14 +31,14 @@ float mandelbrot(vec2 initial_position) {
 void main() {
   vec2 st = gl_FragCoord.st / resolution;
 
-  float scaled_x = (st.x * range.x + min_displayed.x) / 2.0;
-  float scaled_y = (st.y * range.y + min_displayed.y) / 2.0;
+  float scaled_x = (st.x * range.x + min_displayed.x);
+  float scaled_y = (st.y * range.y + min_displayed.y);
   float m = mandelbrot(vec2(scaled_x, scaled_y));
   float v = m / MAX_ITERATIONS;
 
   gl_FragColor = vec4(
-    v * v,
-    v * v,
+    v,
+    v,
     v,
     1.0
   );
