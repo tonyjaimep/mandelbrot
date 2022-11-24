@@ -1,4 +1,6 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/System/Vector2.hpp>
+#include <SFML/Window/Mouse.hpp>
 #include <vector>
 #include <array>
 #include <complex>
@@ -38,6 +40,16 @@ int main()
   sf::Shader shader;
   sf::Sprite sprite;
 
+  sf::Vector2f minDisplayedValues(
+    DEFAULT_MIN_DISPLAYED_VALUE_X,
+    DEFAULT_MIN_DISPLAYED_VALUE_Y
+  );
+
+  sf::Vector2f maxDisplayedValues(
+    DEFAULT_MAX_DISPLAYED_VALUE_X,
+    DEFAULT_MAX_DISPLAYED_VALUE_Y
+  );
+
   // check if shaders are supported
   if (!sf::Shader::isAvailable()) {
     cerr << "ERROR: Shaders are not available in your machine." << endl;
@@ -49,20 +61,6 @@ int main()
 
   // share variables with shader
   shader.setUniform("resolution", sf::Vector2f(window.getSize()));
-  shader.setUniform(
-    "min_displayed",
-    sf::Vector2f(
-      DEFAULT_MIN_DISPLAYED_VALUE_X,
-      DEFAULT_MIN_DISPLAYED_VALUE_Y
-    )
-  );
-  shader.setUniform(
-    "max_displayed",
-    sf::Vector2f(
-      DEFAULT_MAX_DISPLAYED_VALUE_X,
-      DEFAULT_MAX_DISPLAYED_VALUE_Y
-    )
-  );
 
   // initialize sprite that covers entire screen
   // our shader will shade this empty sprite
@@ -77,7 +75,51 @@ int main()
           || sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
         window.close();
       }
+
+      if (event.type == sf::Event::MouseWheelScrolled) {
+        float scrollDirection = event.mouseWheelScroll.delta;
+        float oldRangeX = maxDisplayedValues.x - minDisplayedValues.x;
+        float deltaX = oldRangeX * 0.1;
+        float oldRangeY = maxDisplayedValues.y - minDisplayedValues.y;
+        float deltaY = oldRangeY * 0.1;
+
+        sf::Vector2i mousePosition = sf::Mouse::getPosition();
+        sf::Vector2u windowSize = window.getSize();
+
+        cout << "Mouse position: " << mousePosition.x << ", " << mousePosition.y << endl;
+        cout << "Window size: " << windowSize.x << ", " << windowSize.y << endl;
+
+        float mousePercentLeft = float(mousePosition.x) / float(windowSize.x);
+        float mousePercentTop = float(windowSize.y - mousePosition.y) / float(windowSize.y);
+
+        cout << "mouse percent top: " << mousePercentTop << endl;
+        cout << "mouse percent left: " << mousePercentLeft << endl;
+
+        if (
+          mousePosition.x < 0
+          || mousePosition.y < 0
+          || mousePosition.x > windowSize.x
+          || mousePosition.y > windowSize.y
+        ) {
+          continue;
+        }
+
+        float leftDelta = deltaX * mousePercentLeft;
+        float rightDelta = deltaX - leftDelta;
+
+        float topDelta = deltaY * mousePercentTop;
+        float bottomDelta = deltaY - topDelta;
+
+        minDisplayedValues.x += leftDelta * scrollDirection;
+        minDisplayedValues.y += bottomDelta * scrollDirection;
+
+        maxDisplayedValues.x -= rightDelta * scrollDirection;
+        maxDisplayedValues.y -= bottomDelta * scrollDirection;
+      }
     }
+
+    shader.setUniform("min_displayed", minDisplayedValues);
+    shader.setUniform("max_displayed", maxDisplayedValues);
 
     window.clear();
     window.draw(sprite, &shader);
