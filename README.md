@@ -1,13 +1,10 @@
 # Mandelbrot / Mandelplot
+![Screenshot](screenshot.png)
 Mandelbrot set visualization
+
+## Prerequisites
+This program was built with [SFML](https://www.sfml-dev.org/), so you'll need to install it before running.
 
 ## Usage
 - `make`
 - `./mandelplot`
-- Left-click to zoom in
-- Right-click to zoom out
-
-## What you'll see
-Probably this:
-
-![Screenshot](screenshot.png)
