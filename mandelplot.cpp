@@ -23,7 +23,12 @@ int main()
 	sf::Event event;
 
 	sf::RenderTexture mandelplotRenderTexture;
-	sf::Rect<double> currentView(0, 0, window->getSize().x, window->getSize().y);
+	sf::Rect<double> currentView(
+      0,
+      0,
+      window->getSize().x,
+      window->getSize().y
+  );
 	mandelplotRenderTexture.create(window->getSize().x, window->getSize().y);
 	drawMandelplot(currentView, &mandelplotRenderTexture);
 
@@ -32,8 +37,10 @@ int main()
 
 	while (window->isOpen()) {
 		while (window->pollEvent(event)) {
-			if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+      if (event.type == sf::Event::Closed
+          || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
 				window->close();
+      }
 
 			if (event.type == sf::Event::MouseButtonPressed && !mouseClicked)
 				mouseClicked = true;
@@ -51,10 +58,15 @@ int main()
 
 				mouseClicked = false;
 
-				cout << sf::Mouse::getPosition(*window).x << ", " << sf::Mouse::getPosition(*window).y << endl;
+				cout
+          << sf::Mouse::getPosition(*window).x
+          << ", " << sf::Mouse::getPosition(*window).y
+          << endl;
 
-				currentView.left = sf::Mouse::getPosition(*window).x - (currentView.width / 2);
-				currentView.top = sf::Mouse::getPosition(*window).y - (currentView.height / 2);
+				currentView.left =
+          sf::Mouse::getPosition(*window).x - (currentView.width / 2);
+				currentView.top =
+          sf::Mouse::getPosition(*window).y - (currentView.height / 2);
 
 				if (currentView.top < 0)
 					currentView.top = 0;
@@ -99,8 +111,12 @@ complex<double> toSpacePoint(sf::Vector2f pointInWindow, sf::Vector2u windowSize
 	pointInWindow.x += viewChunk.left;
 	pointInWindow.y += viewChunk.top;
 
-	pointInSpace.real((pointInWindow.x - windowSize.x / 2.0) / (windowSize.x / 4.0));
-	pointInSpace.imag((pointInWindow.y - windowSize.y / 2.0) / (windowSize.x / 4.0));
+	pointInSpace.real(
+    (pointInWindow.x - windowSize.x / 2.0) / (windowSize.x / 4.0)
+  );
+	pointInSpace.imag(
+    (pointInWindow.y - windowSize.y / 2.0) / (windowSize.x / 4.0)
+  );
 
 	pointInSpace.real(pointInSpace.real() * (viewChunk.width / windowSize.x));
 	pointInSpace.imag(pointInSpace.imag() * (viewChunk.height / windowSize.y));
@@ -119,11 +135,28 @@ void drawMandelplot(sf::Rect<double> viewChunk, sf::RenderTarget* renderTarget)
 	// move the rasterpoint to the beginning
 	rasterPoint.setPosition(currentRasterPoint);
 
+  // TODO: Use a shader?
 	// loop through each pixel in the RenderTarget
-	for (; currentRasterPoint.y <= renderTarget->getSize().y; currentRasterPoint.y++) {
-		for (currentRasterPoint.x = 1; currentRasterPoint.x <= renderTarget->getSize().x; currentRasterPoint.x++) {
+	for (
+    ;
+    currentRasterPoint.y <= renderTarget->getSize().y;
+    currentRasterPoint.y++
+  ) {
+		for (
+      currentRasterPoint.x = 1;
+      currentRasterPoint.x <= renderTarget->getSize().x;
+      currentRasterPoint.x++
+    ) {
 			rasterPoint.setPosition(currentRasterPoint);
-			rasterPoint.setFillColor(mandelplot(toSpacePoint(currentRasterPoint, renderTarget->getSize(), viewChunk)));
+			rasterPoint.setFillColor(
+        mandelplot(
+          toSpacePoint(
+            currentRasterPoint,
+            renderTarget->getSize(),
+            viewChunk
+          )
+        )
+      );
 			renderTarget->draw(rasterPoint);
 		}
 	}
@@ -131,6 +164,10 @@ void drawMandelplot(sf::Rect<double> viewChunk, sf::RenderTarget* renderTarget)
 
 sf::RenderWindow* initializeWindow()
 {
-  sf::RenderWindow* window = new sf::RenderWindow(sf::VideoMode(700, 700), "Mandelbrot", sf::Style::None);
+  sf::RenderWindow* window = new sf::RenderWindow(
+    sf::VideoMode(700, 700),
+    "Mandelbrot",
+    sf::Style::None
+  );
   return window;
 }
