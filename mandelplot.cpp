@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
 #include <vector>
 #include <array>
 #include <complex>
@@ -12,25 +13,27 @@ sf::Color mandelplot(complex<double>);
 complex<double> toSpacePoint(sf::Vector2f, sf::Vector2u, sf::Rect<double>);
 void drawMandelplot(sf::Rect<double>, sf::RenderTarget*);
 
+sf::RenderWindow* initializeWindow();
+
 int main()
 {
 	bool mouseClicked = false;
 
-	sf::RenderWindow window(sf::VideoMode(700, 700), "Mandelbrot", sf::Style::None);
+	sf::RenderWindow* window = initializeWindow();
 	sf::Event event;
 
 	sf::RenderTexture mandelplotRenderTexture;
-	sf::Rect<double> currentView(0, 0, window.getSize().x, window.getSize().y);
-	mandelplotRenderTexture.create(window.getSize().x, window.getSize().y);
+	sf::Rect<double> currentView(0, 0, window->getSize().x, window->getSize().y);
+	mandelplotRenderTexture.create(window->getSize().x, window->getSize().y);
 	drawMandelplot(currentView, &mandelplotRenderTexture);
 
 	mandelplotRenderTexture.display();
 	sf::Sprite mandelbrotSet(mandelplotRenderTexture.getTexture());
 
-	while (window.isOpen()) {
-		while (window.pollEvent(event)) {
+	while (window->isOpen()) {
+		while (window->pollEvent(event)) {
 			if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-				window.close();
+				window->close();
 
 			if (event.type == sf::Event::MouseButtonPressed && !mouseClicked)
 				mouseClicked = true;
@@ -48,10 +51,10 @@ int main()
 
 				mouseClicked = false;
 
-				cout << sf::Mouse::getPosition(window).x << ", " << sf::Mouse::getPosition(window).y << endl;
+				cout << sf::Mouse::getPosition(*window).x << ", " << sf::Mouse::getPosition(*window).y << endl;
 
-				currentView.left = sf::Mouse::getPosition(window).x - (currentView.width / 2);
-				currentView.top = sf::Mouse::getPosition(window).y - (currentView.height / 2);
+				currentView.left = sf::Mouse::getPosition(*window).x - (currentView.width / 2);
+				currentView.top = sf::Mouse::getPosition(*window).y - (currentView.height / 2);
 
 				if (currentView.top < 0)
 					currentView.top = 0;
@@ -62,8 +65,8 @@ int main()
 			}
 		}
 
-		window.draw(mandelbrotSet);
-		window.display();
+		window->draw(mandelbrotSet);
+		window->display();
 	}
 
 	return 0;
@@ -124,4 +127,10 @@ void drawMandelplot(sf::Rect<double> viewChunk, sf::RenderTarget* renderTarget)
 			renderTarget->draw(rasterPoint);
 		}
 	}
+}
+
+sf::RenderWindow* initializeWindow()
+{
+  sf::RenderWindow* window = new sf::RenderWindow(sf::VideoMode(700, 700), "Mandelbrot", sf::Style::None);
+  return window;
 }
