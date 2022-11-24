@@ -85,7 +85,7 @@ sf::Color mandelplot(complex<double> complexPoint) {
 		iterations++;
 	}
 
-	return sf::Color(PALETTE[iterations % PALETTE_SIZE], PALETTE[iterations % PALETTE_SIZE], iterations % 255);
+	return sf::Color(iterations % 255, iterations % 255, iterations % 255);
 }
 
 complex<double> toSpacePoint(sf::Vector2f pointInWindow, sf::Vector2u windowSize, sf::Rect<double> viewChunk)
@@ -96,8 +96,8 @@ complex<double> toSpacePoint(sf::Vector2f pointInWindow, sf::Vector2u windowSize
 	pointInWindow.x += viewChunk.left;
 	pointInWindow.y += viewChunk.top;
 
-	pointInSpace.real((pointInWindow.x - windowSize.x / 2) / (windowSize.x / 4));
-	pointInSpace.imag((pointInWindow.y - windowSize.y / 2) / (windowSize.x / 4));
+	pointInSpace.real((pointInWindow.x - windowSize.x / 2.0) / (windowSize.x / 4.0));
+	pointInSpace.imag((pointInWindow.y - windowSize.y / 2.0) / (windowSize.x / 4.0));
 
 	pointInSpace.real(pointInSpace.real() * (viewChunk.width / windowSize.x));
 	pointInSpace.imag(pointInSpace.imag() * (viewChunk.height / windowSize.y));
