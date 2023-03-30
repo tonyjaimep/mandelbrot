@@ -8,19 +8,30 @@
 
 using namespace std;
 
-#define ITERATION_LIMIT 2 * 0xff - 2
+#define DEFAULT_MIN_DISPLAYED_VALUE_X -2.0
+#define DEFAULT_MAX_DISPLAYED_VALUE_X .47
+#define X_RANGE DEFAULT_MAX_DISPLAYED_VALUE_X - DEFAULT_MIN_DISPLAYED_VALUE_X
 
-#define DEFAULT_MIN_DISPLAYED_VALUE_X -2.0f
-#define DEFAULT_MAX_DISPLAYED_VALUE_X 0.47f
+#define DEFAULT_MIN_DISPLAYED_VALUE_Y -1.12
+#define DEFAULT_MAX_DISPLAYED_VALUE_Y 1.12
+#define Y_RANGE DEFAULT_MAX_DISPLAYED_VALUE_Y - DEFAULT_MIN_DISPLAYED_VALUE_Y
 
-#define DEFAULT_MIN_DISPLAYED_VALUE_Y -1.12f
-#define DEFAULT_MAX_DISPLAYED_VALUE_Y 1.12f
+#define XY_RATIO X_RANGE / Y_RANGE
+#define BASE_WINDOW_SIZE 600
 
-#define DEFAULT_WINDOW_WIDTH 300 * (DEFAULT_MAX_DISPLAYED_VALUE_X - DEFAULT_MIN_DISPLAYED_VALUE_X)
-#define DEFAULT_WINDOW_HEIGHT 300 * (DEFAULT_MAX_DISPLAYED_VALUE_Y - DEFAULT_MIN_DISPLAYED_VALUE_Y)
+#define DEFAULT_WINDOW_WIDTH BASE_WINDOW_SIZE
+#define DEFAULT_WINDOW_HEIGHT BASE_WINDOW_SIZE
 
 bool isMouseInsideWindow(const sf::Window* window);
 void pointZoom(const int, sf::Vector2f*, sf::Vector2f*, const sf::Window*);
+void drag(
+  const sf::Vector2i,
+  const sf::Vector2f,
+  const sf::Vector2f,
+  sf::Vector2f*,
+  sf::Vector2f*,
+  const sf::Window*
+);
 
 int main()
 {
@@ -66,6 +77,12 @@ int main()
   texture.create(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
   sprite.setTexture(texture);
 
+  // click and drag
+  bool isDragging;
+  sf::Vector2i draggingFrom;
+  sf::Vector2f startingMinDisplayedValues;
+  sf::Vector2f startingMaxDisplayedValues;
+
   while (window.isOpen()) {
     while (window.pollEvent(event)) {
       // allow quitting with q or ESC
@@ -73,11 +90,37 @@ int main()
           || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)
           || sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
         window.close();
+        continue;
       }
 
       if (event.type == sf::Event::MouseWheelScrolled) {
         pointZoom(
           event.mouseWheelScroll.delta,
+          &minDisplayedValues,
+          &maxDisplayedValues,
+          &window
+        );
+        continue;
+      }
+
+      if (event.type == sf::Event::MouseButtonPressed) {
+        isDragging = true;
+        draggingFrom = sf::Mouse::getPosition(window);
+        startingMinDisplayedValues = sf::Vector2f(minDisplayedValues);
+        startingMaxDisplayedValues = sf::Vector2f(maxDisplayedValues);
+        continue;
+      }
+
+      if (event.type == sf::Event::MouseButtonReleased) {
+        isDragging = false;
+        continue;
+      }
+
+      if (isDragging && event.type == sf::Event::MouseMoved) {
+        drag(
+          draggingFrom,
+          startingMinDisplayedValues,
+          startingMaxDisplayedValues,
           &minDisplayedValues,
           &maxDisplayedValues,
           &window
@@ -145,4 +188,33 @@ bool isMouseInsideWindow(const sf::Window* window)
   if (position.x > windowSize.x || position.y > windowSize.y) return false;
 
   return true;
+}
+
+void drag(
+  // can be -1 or 1
+  const sf::Vector2i startingPosition,
+  const sf::Vector2f startingMinDisplayedValues,
+  const sf::Vector2f startingMaxDisplayedValues,
+  sf::Vector2f* minDisplayedValues,
+  sf::Vector2f* maxDisplayedValues,
+  const sf::Window* window
+) {
+  if (!isMouseInsideWindow(window)) return;
+
+  sf::Vector2i currentPosition = sf::Mouse::getPosition(*window);
+
+  sf::Vector2f range = *maxDisplayedValues - *minDisplayedValues;
+  sf::Vector2f scale(
+    range.x / window->getSize().x,
+    -1 * range.y / window->getSize().y
+  );
+
+  sf::Vector2i diff(currentPosition - startingPosition);
+  sf::Vector2f scaledDiff(
+    scale.x * diff.x,
+    scale.y * diff.y
+  );
+
+  *minDisplayedValues = startingMinDisplayedValues - scaledDiff;
+  *maxDisplayedValues = startingMaxDisplayedValues - scaledDiff;
 }
